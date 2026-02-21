@@ -1,0 +1,139 @@
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useHabitsStore } from '@/store/habits.store';
+import { useHabitStats } from '@/hooks/useHabitStats';
+import { StatsCard } from '@/components/stats/StatsCard';
+import { CompletionChart } from '@/components/stats/CompletionChart';
+import { AchievementBadge } from '@/components/gamification/AchievementBadge';
+import { achievements, getUnlockedAchievements } from '@/constants/achievements';
+
+export default function StatsScreen() {
+  const { habits, fetchHabits } = useHabitsStore();
+  const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchHabits();
+  }, []);
+
+  useEffect(() => {
+    if (habits.length > 0 && !selectedHabitId) {
+      setSelectedHabitId(habits[0].id);
+    }
+  }, [habits]);
+
+  const { stats, checkins, loading } = useHabitStats(selectedHabitId);
+  const unlocked = stats ? getUnlockedAchievements(stats) : [];
+  const unlockedIds = new Set(unlocked.map((a) => a.id));
+
+  if (habits.length === 0) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center">
+        <Text className="text-4xl mb-3">📊</Text>
+        <Text className="text-lg font-semibold text-gray-700">Sem dados ainda</Text>
+        <Text className="text-sm text-gray-500 mt-1">Crie hábitos e faça check-ins para ver estatísticas</Text>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
+        <View className="px-4 pt-4 pb-2">
+          <Text className="text-2xl font-bold text-gray-900">Estatísticas</Text>
+        </View>
+
+        {/* Habit selector */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="px-4 mb-4"
+          contentContainerStyle={{ gap: 8 }}
+        >
+          {habits.map((habit) => (
+            <TouchableOpacity
+              key={habit.id}
+              onPress={() => setSelectedHabitId(habit.id)}
+              className={`px-4 py-2 rounded-full border ${
+                selectedHabitId === habit.id
+                  ? 'bg-purple-600 border-purple-600'
+                  : 'bg-white border-gray-200'
+              }`}
+            >
+              <Text
+                className={`text-sm font-medium ${
+                  selectedHabitId === habit.id ? 'text-white' : 'text-gray-700'
+                }`}
+              >
+                {habit.title}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {loading || !stats ? (
+          <View className="py-12 items-center">
+            <ActivityIndicator color="#9333ea" size="large" />
+          </View>
+        ) : (
+          <>
+            {/* Stats cards */}
+            <View className="px-4 flex-row gap-3 mb-4">
+              <StatsCard
+                label="Streak Atual"
+                value={stats.currentStreak}
+                emoji="🔥"
+                color="text-orange-500"
+              />
+              <StatsCard
+                label="Melhor Streak"
+                value={stats.bestStreak}
+                emoji="⚡"
+                color="text-yellow-500"
+              />
+            </View>
+            <View className="px-4 flex-row gap-3 mb-4">
+              <StatsCard
+                label="Total Check-ins"
+                value={stats.totalCheckins}
+                emoji="✅"
+                color="text-green-600"
+              />
+              <StatsCard
+                label="Taxa 30 dias"
+                value={`${Math.round(stats.completionRate)}%`}
+                emoji="🎯"
+                color="text-purple-600"
+              />
+            </View>
+
+            {/* Chart */}
+            <View className="mx-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm mb-4">
+              <CompletionChart checkins={checkins} />
+            </View>
+
+            {/* Achievements */}
+            <View className="px-4">
+              <Text className="text-lg font-bold text-gray-900 mb-3">Conquistas</Text>
+              <View className="flex-row flex-wrap gap-3">
+                {achievements.map((achievement) => (
+                  <AchievementBadge
+                    key={achievement.id}
+                    achievement={achievement}
+                    unlocked={unlockedIds.has(achievement.id)}
+                  />
+                ))}
+              </View>
+            </View>
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
