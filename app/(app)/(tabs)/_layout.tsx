@@ -13,6 +13,7 @@ interface TabConfig {
 const tabs: TabConfig[] = [
   { name: 'index', title: 'Hoje', icon: 'home-outline', activeIcon: 'home' },
   { name: 'habits', title: 'Hábitos', icon: 'list-outline', activeIcon: 'list' },
+  { name: 'calendar', title: 'Calendário', icon: 'calendar-outline', activeIcon: 'calendar' },
   { name: 'stats', title: 'Estatísticas', icon: 'bar-chart-outline', activeIcon: 'bar-chart' },
   { name: 'profile', title: 'Perfil', icon: 'person-outline', activeIcon: 'person' },
 ];
