@@ -45,6 +45,10 @@ export const habitsApi = {
     return response.data;
   },
 
+  async deleteCheckin(habitId: string, checkinId: string): Promise<void> {
+    await apiClient(`/habits/${habitId}/checkins/${checkinId}`, { method: 'DELETE' });
+  },
+
   async getStats(habitId: string): Promise<HabitStats> {
     const response = await apiClient<{ data: HabitStats }>(`/habits/${habitId}/stats`);
     return response.data;

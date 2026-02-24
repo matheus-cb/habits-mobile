@@ -20,7 +20,8 @@ function todayHeader(): string {
 
 export default function TodayScreen() {
   const user = useAuthStore((s) => s.user);
-  const { habits, loading, fetchHabits, checkin, isCheckedInToday } = useHabitsStore();
+  const { habits, loading, checkinsByHabit, fetchHabits, checkin, undoCheckin, isCheckedInToday } =
+    useHabitsStore();
 
   useEffect(() => {
     fetchHabits();
@@ -33,11 +34,19 @@ export default function TodayScreen() {
   const checkedCount = habits.filter((h) => isCheckedInToday(h.id)).length;
 
   function renderHabit({ item }: { item: Habit }) {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const todayCheckin = (checkinsByHabit[item.id] || []).find(
+      (c) => c.date.startsWith(today) && !c.id.startsWith('local-')
+    );
+
     return (
       <HabitCard
         habit={item}
         isCheckedIn={isCheckedInToday(item.id)}
         onCheckin={checkin}
+        onUndoCheckin={
+          todayCheckin ? () => undoCheckin(item.id, todayCheckin.id) : undefined
+        }
       />
     );
   }
