@@ -10,6 +10,7 @@ export function useHabits() {
     updateHabit: state.updateHabit,
     deleteHabit: state.deleteHabit,
     checkin: state.checkin,
+    undoCheckin: state.undoCheckin,
     fetchCheckins: state.fetchCheckins,
     isCheckedInToday: state.isCheckedInToday,
     clearError: state.clearError,

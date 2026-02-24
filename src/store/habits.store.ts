@@ -14,6 +14,7 @@ interface HabitsState {
   updateHabit: (id: string, data: { title?: string; description?: string }) => Promise<void>;
   deleteHabit: (id: string) => Promise<void>;
   checkin: (habitId: string) => Promise<void>;
+  undoCheckin: (habitId: string, checkinId: string) => Promise<void>;
   fetchCheckins: (habitId: string) => Promise<void>;
   isCheckedInToday: (habitId: string) => boolean;
   clearError: () => void;
@@ -106,6 +107,21 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
         return;
       }
       set({ error: err.message || 'Erro ao fazer check-in' });
+      throw err;
+    }
+  },
+
+  undoCheckin: async (habitId, checkinId) => {
+    try {
+      await habitsApi.deleteCheckin(habitId, checkinId);
+      set((state) => ({
+        checkinsByHabit: {
+          ...state.checkinsByHabit,
+          [habitId]: (state.checkinsByHabit[habitId] || []).filter((c) => c.id !== checkinId),
+        },
+      }));
+    } catch (err: any) {
+      set({ error: err.message || 'Erro ao desfazer check-in' });
       throw err;
     }
   },
