@@ -31,7 +31,19 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const habits = await habitsApi.list();
-      set({ habits, loading: false });
+
+      // Load checkins for all habits in parallel so isCheckedInToday is
+      // correct on first render (not just after user interaction).
+      const results = await Promise.allSettled(
+        habits.map((h) => habitsApi.getCheckins(h.id))
+      );
+      const checkinsByHabit: Record<string, Checkin[]> = {};
+      habits.forEach((h, i) => {
+        const r = results[i];
+        checkinsByHabit[h.id] = r.status === 'fulfilled' ? r.value : [];
+      });
+
+      set({ habits, checkinsByHabit, loading: false });
     } catch (err: any) {
       set({ error: err.message || 'Erro ao carregar hábitos', loading: false });
     }
@@ -40,7 +52,11 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
   createHabit: async (data) => {
     try {
       const newHabit = await habitsApi.create(data);
-      set((state) => ({ habits: [...state.habits, newHabit] }));
+      set((state) => ({
+        habits: [...state.habits, newHabit],
+        // Initialize cache so isCheckedInToday never crashes on new habit
+        checkinsByHabit: { ...state.checkinsByHabit, [newHabit.id]: [] },
+      }));
       return newHabit;
     } catch (err: any) {
       set({ error: err.message || 'Erro ao criar hábito' });

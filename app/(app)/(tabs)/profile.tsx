@@ -28,6 +28,7 @@ export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const updateProfile = useAuthStore((s) => s.updateProfile);
+  const clearAuthError = useAuthStore((s) => s.clearError);
   const reset = useHabitsStore((s) => s.reset);
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -114,7 +115,9 @@ export default function ProfileScreen() {
     if (success) {
       setEditModalVisible(false);
     } else {
-      Alert.alert('Erro', 'Não foi possível atualizar o perfil.');
+      // useAuthStore.error is already translated by the store's translateError
+      const msg = useAuthStore.getState().error || 'Não foi possível atualizar o perfil.';
+      Alert.alert('Erro', msg, [{ text: 'OK', onPress: clearAuthError }]);
     }
   }
 
