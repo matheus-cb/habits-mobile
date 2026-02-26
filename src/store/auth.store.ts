@@ -5,6 +5,7 @@ import type { User, LoginCredentials, RegisterCredentials } from '@/types';
 const errorMessages: Record<string, string> = {
   'Invalid credentials': 'Email ou senha incorretos',
   'Email already exists': 'Este email já está cadastrado',
+  'Email already in use': 'Este email já está em uso',
   'User not found': 'Usuário não encontrado',
 };
 

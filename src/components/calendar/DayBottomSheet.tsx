@@ -6,11 +6,13 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { format, isAfter, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Ionicons } from '@expo/vector-icons';
 import { habitsApi } from '@/lib/api/habits';
+import { ApiError } from '@/lib/api/client';
 import { habitColor } from './HabitDot';
 import type { Habit, Checkin } from '@/types';
 
@@ -58,8 +60,12 @@ export function DayBottomSheet({
         await habitsApi.checkin(habit.id, new Date(dateStr).toISOString());
       }
       await onRefresh();
-    } catch {
-      // silently ignore — e.g. 409 conflict already handled server-side
+    } catch (err: unknown) {
+      // 409 = already checked in for this date — harmless, ignore silently.
+      // Any other error (network, 500, etc.) should be surfaced to the user.
+      if (!(err instanceof ApiError && err.status === 409)) {
+        Alert.alert('Erro', 'Não foi possível alterar o check-in. Tente novamente.');
+      }
     } finally {
       setLoadingIds((prev) => {
         const next = new Set(prev);

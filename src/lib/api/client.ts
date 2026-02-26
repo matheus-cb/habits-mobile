@@ -13,35 +13,52 @@ export class ApiError extends Error {
   }
 }
 
+const REQUEST_TIMEOUT_MS = 30_000;
+
 export async function apiClient<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
   const token = await SecureStore.getItemAsync('token');
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options?.headers,
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-  if (response.status === 204) {
-    return undefined as T;
-  }
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options?.headers,
+      },
+    });
 
-  const data = await response.json();
+    clearTimeout(timeoutId);
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      const { useAuthStore } = await import('@/store/auth.store');
-      useAuthStore.getState().logout();
+    if (response.status === 204) {
+      return undefined as T;
     }
-    const message = (data as any).error || (data as any).message || 'Erro na requisição';
-    throw new ApiError(message, response.status, data);
-  }
 
-  return data;
+    const data = await response.json();
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        const { useAuthStore } = await import('@/store/auth.store');
+        useAuthStore.getState().logout();
+      }
+      const message = (data as any).error || (data as any).message || 'Erro na requisição';
+      throw new ApiError(message, response.status, data);
+    }
+
+    return data;
+  } catch (err: unknown) {
+    clearTimeout(timeoutId);
+    if (err instanceof ApiError) throw err;
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new ApiError('A requisição demorou muito. Verifique sua conexão.', 408);
+    }
+    throw new ApiError('Erro de conexão. Verifique sua internet.', 0);
+  }
 }

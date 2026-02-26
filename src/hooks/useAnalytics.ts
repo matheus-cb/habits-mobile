@@ -35,7 +35,7 @@ export function useAnalytics(): AnalyticsData {
         return;
       }
 
-      const results = await Promise.all(
+      const results = await Promise.allSettled(
         habitsData.map(async (habit) => {
           const [stats, checkins] = await Promise.all([
             habitsApi.getStats(habit.id),
@@ -45,11 +45,15 @@ export function useAnalytics(): AnalyticsData {
         })
       );
 
+      // Fulfilled entries populate the maps; rejected ones are silently skipped
+      // so a single failing habit doesn't break the entire analytics view.
       const newStatsMap: Record<string, HabitStats> = {};
       const newCheckinsMap: Record<string, Checkin[]> = {};
       for (const r of results) {
-        newStatsMap[r.id] = r.stats;
-        newCheckinsMap[r.id] = r.checkins;
+        if (r.status === 'fulfilled') {
+          newStatsMap[r.value.id] = r.value.stats;
+          newCheckinsMap[r.value.id] = r.value.checkins;
+        }
       }
 
       setStatsMap(newStatsMap);

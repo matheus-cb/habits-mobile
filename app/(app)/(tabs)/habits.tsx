@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useHabitsStore } from '@/store/habits.store';
 import { useRemindersStore } from '@/store/reminders.store';
@@ -24,10 +25,10 @@ export default function HabitsScreen() {
   const [formVisible, setFormVisible] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     fetchHabits();
     loadReminders();
-  }, []);
+  }, []));
 
   useEffect(() => {
     if (error) {
