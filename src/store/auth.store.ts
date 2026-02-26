@@ -21,6 +21,7 @@ interface AuthState {
   register: (credentials: RegisterCredentials) => Promise<boolean>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
+  updateProfile: (data: { name?: string; email?: string }) => Promise<boolean>;
   clearError: () => void;
 }
 
@@ -74,6 +75,18 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     await authApi.removeToken();
     set({ user: null, isAuthenticated: false, error: null });
+  },
+
+  updateProfile: async (data) => {
+    try {
+      set({ error: null });
+      const user = await authApi.updateProfile(data);
+      set({ user });
+      return true;
+    } catch (err: any) {
+      set({ error: translateError(err.message) || 'Erro ao atualizar perfil' });
+      return false;
+    }
   },
 
   clearError: () => set({ error: null }),
