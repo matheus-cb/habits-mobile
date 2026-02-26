@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useHabitsStore } from '@/store/habits.store';
+import { useRemindersStore } from '@/store/reminders.store';
 import { HabitListItem } from '@/components/habits/HabitListItem';
 import { HabitForm } from '@/components/habits/HabitForm';
 import type { Habit } from '@/types';
@@ -18,12 +19,14 @@ import type { HabitFormData } from '@/schemas/habit.schema';
 export default function HabitsScreen() {
   const { habits, loading, error, fetchHabits, createHabit, updateHabit, deleteHabit, clearError } =
     useHabitsStore();
+  const { reminders, load: loadReminders, setReminder, removeReminder } = useRemindersStore();
 
   const [formVisible, setFormVisible] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
 
   useEffect(() => {
     fetchHabits();
+    loadReminders();
   }, []);
 
   useEffect(() => {
@@ -75,8 +78,11 @@ export default function HabitsScreen() {
           renderItem={({ item }) => (
             <HabitListItem
               habit={item}
+              reminderTime={reminders[item.id] ?? null}
               onEdit={openEdit}
               onDelete={deleteHabit}
+              onSetReminder={setReminder}
+              onRemoveReminder={removeReminder}
             />
           )}
           contentContainerStyle={{ padding: 16 }}
