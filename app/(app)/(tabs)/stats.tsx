@@ -14,6 +14,7 @@ import { CompletionChart } from '@/components/stats/CompletionChart';
 import { GlobalSummaryCards } from '@/components/stats/GlobalSummaryCards';
 import { ActivityHeatmap } from '@/components/stats/ActivityHeatmap';
 import { HabitCompletionBars } from '@/components/stats/HabitCompletionBars';
+import { SortableHabitsTable } from '@/components/stats/SortableHabitsTable';
 import { AchievementBadge } from '@/components/gamification/AchievementBadge';
 import { achievements, getUnlockedAchievements } from '@/constants/achievements';
 
@@ -95,6 +96,10 @@ export default function StatsScreen() {
                 <GlobalSummaryCards habits={habits} statsMap={statsMap} />
                 <ActivityHeatmap checkinsMap={checkinsMap} />
                 <HabitCompletionBars habits={habits} statsMap={statsMap} />
+                <Text className="px-4 mt-4 mb-2 text-base font-bold text-gray-900">
+                  Tabela Comparativa
+                </Text>
+                <SortableHabitsTable habits={habits} statsMap={statsMap} />
               </>
             )}
 

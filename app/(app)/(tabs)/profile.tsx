@@ -8,6 +8,7 @@ import {
   Platform,
   Modal,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -26,6 +27,7 @@ const REMINDER_MIN_KEY = 'reminder_minute';
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const updateProfile = useAuthStore((s) => s.updateProfile);
   const reset = useHabitsStore((s) => s.reset);
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -34,6 +36,11 @@ export default function ProfileScreen() {
   const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [tempHour, setTempHour] = useState(8);
   const [tempMinute, setTempMinute] = useState(0);
+
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -84,6 +91,33 @@ export default function ProfileScreen() {
     setTimePickerVisible(true);
   }
 
+  function openEditModal() {
+    setEditName(user?.name ?? '');
+    setEditEmail(user?.email ?? '');
+    setEditModalVisible(true);
+  }
+
+  async function handleSaveProfile() {
+    const data: { name?: string; email?: string } = {};
+    if (editName.trim() && editName.trim() !== user?.name) data.name = editName.trim();
+    if (editEmail.trim() && editEmail.trim() !== user?.email) data.email = editEmail.trim();
+
+    if (Object.keys(data).length === 0) {
+      setEditModalVisible(false);
+      return;
+    }
+
+    setEditLoading(true);
+    const success = await updateProfile(data);
+    setEditLoading(false);
+
+    if (success) {
+      setEditModalVisible(false);
+    } else {
+      Alert.alert('Erro', 'Não foi possível atualizar o perfil.');
+    }
+  }
+
   async function handleLogout() {
     Alert.alert('Sair', 'Deseja encerrar a sessão?', [
       { text: 'Cancelar', style: 'cancel' },
@@ -120,6 +154,12 @@ export default function ProfileScreen() {
               <Text className="text-lg font-bold text-gray-900">{user?.name}</Text>
               <Text className="text-sm text-gray-500">{user?.email}</Text>
             </View>
+            <TouchableOpacity
+              onPress={openEditModal}
+              className="w-9 h-9 bg-purple-50 rounded-full items-center justify-center"
+            >
+              <Ionicons name="pencil" size={16} color="#9333ea" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -164,6 +204,47 @@ export default function ProfileScreen() {
           <Button title="Sair" variant="danger" onPress={handleLogout} />
         </View>
       </ScrollView>
+
+      {/* Edit Profile Modal */}
+      <Modal visible={editModalVisible} transparent animationType="fade" onRequestClose={() => setEditModalVisible(false)}>
+        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+          <View className="bg-white rounded-2xl p-6 w-full">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-lg font-bold text-gray-900">Editar Perfil</Text>
+              <TouchableOpacity
+                onPress={() => setEditModalVisible(false)}
+                className="w-8 h-8 items-center justify-center rounded-full bg-gray-100"
+              >
+                <Ionicons name="close" size={16} color="#6b7280" />
+              </TouchableOpacity>
+            </View>
+
+            <Text className="text-sm text-gray-500 mb-1">Nome</Text>
+            <TextInput
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="Seu nome"
+              className="border border-gray-200 rounded-xl px-3 py-2.5 text-gray-900 mb-3"
+              autoCapitalize="words"
+            />
+
+            <Text className="text-sm text-gray-500 mb-1">Email</Text>
+            <TextInput
+              value={editEmail}
+              onChangeText={setEditEmail}
+              placeholder="Seu email"
+              className="border border-gray-200 rounded-xl px-3 py-2.5 text-gray-900 mb-5"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <View className="gap-3">
+              <Button title={editLoading ? 'Salvando…' : 'Salvar'} onPress={handleSaveProfile} />
+              <Button title="Cancelar" variant="secondary" onPress={() => setEditModalVisible(false)} />
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Time Picker Modal */}
       <Modal visible={timePickerVisible} transparent animationType="fade">
