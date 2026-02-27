@@ -1,15 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { HabitReminderModal } from './HabitReminderModal';
 import type { Habit } from '@/types';
 
 interface HabitListItemProps {
   habit: Habit;
+  reminderTime: string | null;
   onEdit: (habit: Habit) => void;
   onDelete: (id: string) => void;
+  onSetReminder: (habitId: string, habitTitle: string, time: string) => void;
+  onRemoveReminder: (habitId: string) => void;
 }
 
-export function HabitListItem({ habit, onEdit, onDelete }: HabitListItemProps) {
+export function HabitListItem({
+  habit,
+  reminderTime,
+  onEdit,
+  onDelete,
+  onSetReminder,
+  onRemoveReminder,
+}: HabitListItemProps) {
+  const [reminderModalVisible, setReminderModalVisible] = useState(false);
+
   function confirmDelete() {
     Alert.alert(
       'Excluir Hábito',
@@ -22,29 +35,65 @@ export function HabitListItem({ habit, onEdit, onDelete }: HabitListItemProps) {
   }
 
   return (
-    <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100 shadow-sm flex-row items-center">
-      <View className="flex-1 mr-2">
-        <Text className="text-base font-semibold text-gray-900">{habit.title}</Text>
-        {habit.description ? (
-          <Text className="text-sm text-gray-500 mt-0.5" numberOfLines={2}>
-            {habit.description}
-          </Text>
-        ) : null}
+    <>
+      <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100 shadow-sm flex-row items-center">
+        <View className="flex-1 mr-2">
+          <Text className="text-base font-semibold text-gray-900">{habit.title}</Text>
+          {habit.description ? (
+            <Text className="text-sm text-gray-500 mt-0.5" numberOfLines={2}>
+              {habit.description}
+            </Text>
+          ) : null}
+          {reminderTime ? (
+            <View className="flex-row items-center gap-1 mt-1">
+              <Ionicons name="alarm-outline" size={11} color="#9333ea" />
+              <Text className="text-xs text-purple-600">{reminderTime}</Text>
+            </View>
+          ) : null}
+        </View>
+
+        <View className="flex-row gap-2">
+          <TouchableOpacity
+            onPress={() => setReminderModalVisible(true)}
+            className={`w-9 h-9 rounded-full items-center justify-center ${
+              reminderTime ? 'bg-purple-100' : 'bg-gray-100'
+            }`}
+          >
+            <Ionicons
+              name={reminderTime ? 'notifications' : 'notifications-outline'}
+              size={16}
+              color={reminderTime ? '#9333ea' : '#9ca3af'}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => onEdit(habit)}
+            className="w-9 h-9 rounded-full bg-purple-50 items-center justify-center"
+          >
+            <Ionicons name="pencil" size={16} color="#9333ea" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={confirmDelete}
+            className="w-9 h-9 rounded-full bg-red-50 items-center justify-center"
+          >
+            <Ionicons name="trash" size={16} color="#ef4444" />
+          </TouchableOpacity>
+        </View>
       </View>
-      <View className="flex-row gap-2">
-        <TouchableOpacity
-          onPress={() => onEdit(habit)}
-          className="w-9 h-9 rounded-full bg-purple-50 items-center justify-center"
-        >
-          <Ionicons name="pencil" size={16} color="#9333ea" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={confirmDelete}
-          className="w-9 h-9 rounded-full bg-red-50 items-center justify-center"
-        >
-          <Ionicons name="trash" size={16} color="#ef4444" />
-        </TouchableOpacity>
-      </View>
-    </View>
+
+      <HabitReminderModal
+        visible={reminderModalVisible}
+        habitTitle={habit.title}
+        currentTime={reminderTime}
+        onSave={(time) => {
+          onSetReminder(habit.id, habit.title, time);
+          setReminderModalVisible(false);
+        }}
+        onRemove={() => {
+          onRemoveReminder(habit.id);
+          setReminderModalVisible(false);
+        }}
+        onClose={() => setReminderModalVisible(false)}
+      />
+    </>
   );
 }

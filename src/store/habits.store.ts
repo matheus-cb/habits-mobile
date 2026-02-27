@@ -14,6 +14,7 @@ interface HabitsState {
   updateHabit: (id: string, data: { title?: string; description?: string }) => Promise<void>;
   deleteHabit: (id: string) => Promise<void>;
   checkin: (habitId: string) => Promise<void>;
+  undoCheckin: (habitId: string, checkinId: string) => Promise<void>;
   fetchCheckins: (habitId: string) => Promise<void>;
   isCheckedInToday: (habitId: string) => boolean;
   clearError: () => void;
@@ -30,7 +31,19 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const habits = await habitsApi.list();
-      set({ habits, loading: false });
+
+      // Load checkins for all habits in parallel so isCheckedInToday is
+      // correct on first render (not just after user interaction).
+      const results = await Promise.allSettled(
+        habits.map((h) => habitsApi.getCheckins(h.id))
+      );
+      const checkinsByHabit: Record<string, Checkin[]> = {};
+      habits.forEach((h, i) => {
+        const r = results[i];
+        checkinsByHabit[h.id] = r.status === 'fulfilled' ? r.value : [];
+      });
+
+      set({ habits, checkinsByHabit, loading: false });
     } catch (err: any) {
       set({ error: err.message || 'Erro ao carregar hábitos', loading: false });
     }
@@ -39,7 +52,11 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
   createHabit: async (data) => {
     try {
       const newHabit = await habitsApi.create(data);
-      set((state) => ({ habits: [...state.habits, newHabit] }));
+      set((state) => ({
+        habits: [...state.habits, newHabit],
+        // Initialize cache so isCheckedInToday never crashes on new habit
+        checkinsByHabit: { ...state.checkinsByHabit, [newHabit.id]: [] },
+      }));
       return newHabit;
     } catch (err: any) {
       set({ error: err.message || 'Erro ao criar hábito' });
@@ -106,6 +123,21 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
         return;
       }
       set({ error: err.message || 'Erro ao fazer check-in' });
+      throw err;
+    }
+  },
+
+  undoCheckin: async (habitId, checkinId) => {
+    try {
+      await habitsApi.deleteCheckin(habitId, checkinId);
+      set((state) => ({
+        checkinsByHabit: {
+          ...state.checkinsByHabit,
+          [habitId]: (state.checkinsByHabit[habitId] || []).filter((c) => c.id !== checkinId),
+        },
+      }));
+    } catch (err: any) {
+      set({ error: err.message || 'Erro ao desfazer check-in' });
       throw err;
     }
   },

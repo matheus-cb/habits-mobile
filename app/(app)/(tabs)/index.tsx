@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuthStore } from '@/store/auth.store';
@@ -20,11 +21,12 @@ function todayHeader(): string {
 
 export default function TodayScreen() {
   const user = useAuthStore((s) => s.user);
-  const { habits, loading, fetchHabits, checkin, isCheckedInToday } = useHabitsStore();
+  const { habits, loading, checkinsByHabit, fetchHabits, checkin, undoCheckin, isCheckedInToday } =
+    useHabitsStore();
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     fetchHabits();
-  }, []);
+  }, []));
 
   const onRefresh = useCallback(async () => {
     await fetchHabits();
@@ -33,11 +35,19 @@ export default function TodayScreen() {
   const checkedCount = habits.filter((h) => isCheckedInToday(h.id)).length;
 
   function renderHabit({ item }: { item: Habit }) {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const todayCheckin = (checkinsByHabit[item.id] || []).find(
+      (c) => c.date.startsWith(today) && !c.id.startsWith('local-')
+    );
+
     return (
       <HabitCard
         habit={item}
         isCheckedIn={isCheckedInToday(item.id)}
         onCheckin={checkin}
+        onUndoCheckin={
+          todayCheckin ? () => undoCheckin(item.id, todayCheckin.id) : undefined
+        }
       />
     );
   }

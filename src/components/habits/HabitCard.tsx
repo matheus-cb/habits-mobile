@@ -8,10 +8,12 @@ interface HabitCardProps {
   habit: Habit;
   isCheckedIn: boolean;
   onCheckin: (habitId: string) => Promise<void>;
+  onUndoCheckin?: () => Promise<void>;
 }
 
-export function HabitCard({ habit, isCheckedIn, onCheckin }: HabitCardProps) {
+export function HabitCard({ habit, isCheckedIn, onCheckin, onUndoCheckin }: HabitCardProps) {
   const [loading, setLoading] = useState(false);
+  const [loadingUndo, setLoadingUndo] = useState(false);
 
   async function handleCheckin() {
     setLoading(true);
@@ -19,6 +21,16 @@ export function HabitCard({ habit, isCheckedIn, onCheckin }: HabitCardProps) {
       await onCheckin(habit.id);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleUndo() {
+    if (!onUndoCheckin) return;
+    setLoadingUndo(true);
+    try {
+      await onUndoCheckin();
+    } finally {
+      setLoadingUndo(false);
     }
   }
 
@@ -35,7 +47,13 @@ export function HabitCard({ habit, isCheckedIn, onCheckin }: HabitCardProps) {
             </Text>
           ) : null}
         </View>
-        <CheckinButton done={isCheckedIn} onPress={handleCheckin} loading={loading} />
+        <CheckinButton
+          done={isCheckedIn}
+          onPress={handleCheckin}
+          onUndo={onUndoCheckin ? handleUndo : undefined}
+          loading={loading}
+          loadingUndo={loadingUndo}
+        />
       </View>
     </Card>
   );

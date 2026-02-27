@@ -20,8 +20,16 @@ export const authApi = {
   },
 
   async getProfile(): Promise<User> {
-    const response = await apiClient<{ data: { user: User } }>('/auth/me');
-    return response.data.user;
+    const response = await apiClient<{ data: User }>('/auth/me');
+    return response.data;
+  },
+
+  async updateProfile(data: { name?: string; email?: string }): Promise<User> {
+    const response = await apiClient<{ data: User }>('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return response.data;
   },
 
   async saveToken(token: string): Promise<void> {
