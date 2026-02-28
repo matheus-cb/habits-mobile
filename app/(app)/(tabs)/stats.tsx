@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from 'expo-router';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { StatsCard } from '@/components/stats/StatsCard';
 import { CompletionChart } from '@/components/stats/CompletionChart';
@@ -25,7 +24,11 @@ export default function StatsScreen() {
   const [view, setView] = useState<ViewMode>('habit');
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
 
-  useFocusEffect(useCallback(() => { refresh(); }, []));
+  // Recarrega ao entrar na aba "Por Hábito" (sem useFocusEffect — causa MISSING_CONTEXT_ERROR)
+  useEffect(() => {
+    if (view === 'habit') refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
   useEffect(() => {
     if (habits.length > 0 && !selectedHabitId) {
@@ -54,24 +57,28 @@ export default function StatsScreen() {
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
 
-        {/* Header + toggle */}
-        <View className="px-4 pt-4 pb-2 flex-row items-center justify-between">
+        {/* Header */}
+        <View className="px-4 pt-4 pb-2">
           <Text className="text-2xl font-bold text-gray-900">Estatísticas</Text>
-          <View className="flex-row bg-gray-200 rounded-full p-0.5">
+        </View>
+
+        {/* Toggle largura total */}
+        <View className="px-4 mb-4">
+          <View className="flex-row bg-gray-200 rounded-full p-1">
             <TouchableOpacity
-              onPress={() => setView('habit')}
-              className={`px-3 py-1 rounded-full ${view === 'habit' ? 'bg-white shadow-sm' : ''}`}
+              onPress={() => setView('global')}
+              className={`flex-1 py-2 rounded-full items-center ${view === 'global' ? 'bg-white shadow-sm' : ''}`}
             >
-              <Text className={`text-xs font-medium ${view === 'habit' ? 'text-gray-900' : 'text-gray-500'}`}>
-                Por Hábito
+              <Text className={`text-sm font-medium ${view === 'global' ? 'text-purple-600' : 'text-gray-500'}`}>
+                Geral
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setView('global')}
-              className={`px-3 py-1 rounded-full ${view === 'global' ? 'bg-white shadow-sm' : ''}`}
+              onPress={() => setView('habit')}
+              className={`flex-1 py-2 rounded-full items-center ${view === 'habit' ? 'bg-white shadow-sm' : ''}`}
             >
-              <Text className={`text-xs font-medium ${view === 'global' ? 'text-gray-900' : 'text-gray-500'}`}>
-                Visão Geral
+              <Text className={`text-sm font-medium ${view === 'habit' ? 'text-purple-600' : 'text-gray-500'}`}>
+                Por Hábito
               </Text>
             </TouchableOpacity>
           </View>

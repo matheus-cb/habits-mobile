@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from 'expo-router';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useCalendar } from '@/hooks/useCalendar';
 import { MonthNavigator } from '@/components/calendar/MonthNavigator';
@@ -28,13 +27,6 @@ export default function CalendarScreen() {
     calendarDays,
     checkinsDateMap,
   } = useCalendar(checkinsMap);
-
-  // Refresh analytics whenever this tab comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      refresh();
-    }, [])
-  );
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">

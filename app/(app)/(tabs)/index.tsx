@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from 'expo-router';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuthStore } from '@/store/auth.store';
@@ -24,9 +23,9 @@ export default function TodayScreen() {
   const { habits, loading, checkinsByHabit, fetchHabits, checkin, undoCheckin, isCheckedInToday } =
     useHabitsStore();
 
-  useFocusEffect(useCallback(() => {
+  useEffect(() => {
     fetchHabits();
-  }, []));
+  }, []);
 
   const onRefresh = useCallback(async () => {
     await fetchHabits();
