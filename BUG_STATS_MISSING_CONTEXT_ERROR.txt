@@ -1,0 +1,117 @@
+================================================================================
+BUG: MISSING_CONTEXT_ERROR na aba Estatísticas (stats.tsx)
+Status: NÃO RESOLVIDO
+Data: 2026-03-05
+================================================================================
+
+DESCRIÇÃO DO ERRO
+-----------------
+Ao acessar a aba "Estatísticas" no app, ocorre um render error com a mensagem:
+
+  "Couldn't find a navigation context. Have you wrapped your app inside a
+   NavigationContainer? See [...]"
+  Código: MISSING_CONTEXT_ERROR
+
+O stack trace aponta para a linha 68 de app/(app)/(tabs)/stats.tsx:
+
+  > 68 |             <TouchableOpacity
+       |             ^
+    69 |               onPress={() => setView('global')}
+    70 |               className={`flex-1 py-2 rounded-full items-center ${...}`}
+
+
+CAUSA ORIGINAL IDENTIFICADA
+----------------------------
+O código remoto (origin/main antes do PR merge) introduziu `useFocusEffect`
+importado de `expo-router`. A versão `expo-router ~6.0.23` NÃO exporta
+`useFocusEffect`, causando um ReferenceError que se propaga como
+MISSING_CONTEXT_ERROR.
+
+Arquivos afetados originalmente (todos com `useFocusEffect` importado):
+  - app/(app)/(tabs)/index.tsx
+  - app/(app)/(tabs)/habits.tsx
+  - app/(app)/(tabs)/calendar.tsx
+  - app/(app)/(tabs)/stats.tsx
+
+
+CORREÇÕES APLICADAS (commit 383e572 + 76d91a5)
+-----------------------------------------------
+1. Removido `useFocusEffect` de todos os 4 arquivos acima.
+   Substituído por `useEffect([], [])` ou `useEffect([dep], [dep])`.
+
+2. Adicionado "mount gate" em stats.tsx como defesa adicional:
+   - `const [mounted, setMounted] = useState(false)`
+   - `useEffect(() => { setMounted(true); }, [])`
+   - `if (!mounted) return <SafeAreaView className="flex-1 bg-gray-50" />`
+   Isso garante que o conteúdo pesado só renderiza após o contexto de
+   navegação do Expo Router estar estabelecido.
+
+3. Restaurado layout preferido do toggle em stats.tsx:
+   - Toggle em largura total abaixo do header "Estatísticas"
+   - Ordem: "Geral" primeiro, "Por Hábito" segundo
+   - Cor ativa: text-purple-600
+
+
+POR QUE AINDA PODE FALHAR
+--------------------------
+Mesmo após as correções acima, o erro pode persistir se:
+
+  a) Cache do Metro: O bundler está servindo o bundle antigo que ainda
+     contém `useFocusEffect`. Solução: parar o servidor e rodar:
+       npx expo start --clear --ios
+
+  b) Causa raiz desconhecida: A investigação confirmou ZERO hooks de
+     navegação (@react-navigation, useNavigation, useRoute, useFocusEffect,
+     useIsFocused, useScrollToTop) em TODO o source code do projeto,
+     incluindo todos os componentes importados por stats.tsx:
+       - src/hooks/useAnalytics.ts        ✓ limpo
+       - src/components/stats/*           ✓ limpo
+       - src/components/gamification/*    ✓ limpo
+     Ainda assim o erro ocorre em um <TouchableOpacity> simples (linha 68),
+     o que sugere uma interação não identificada entre:
+       - React 19.1.0
+       - expo-router ~6.0.23 (usa @react-navigation/bottom-tabs ^7.4.0 internamente)
+       - NativeWind ^4.2.1 (react-native-css-interop)
+       - react-native 0.81.5
+
+
+INVESTIGAÇÃO REALIZADA
+-----------------------
+- Grep completo em src/ e app/ por todos os hooks de navegação → 0 resultados
+- Leitura de todos os componentes importados por stats.tsx → todos limpos
+- Verificação de _layout.tsx (tabs, app, root) → nenhum hook problemático
+- Verificação de useAnalytics.ts → apenas useState + useEffect
+- Verificação de SortableHabitsTable.tsx → apenas useState
+- Pesquisa por NativeWind context issues + React Navigation v7 timing → inconclusivo
+
+
+PRÓXIMOS PASSOS SUGERIDOS
+--------------------------
+1. Rodar `npx expo start --clear --ios` e testar se o erro some com cache limpo.
+
+2. Se persistir, verificar se o erro ocorre em TODAS as tabs ou só em stats:
+   - Se só em stats: investigar interação específica entre os componentes de stats
+   - Se em outras tabs também: problema é no layout ou configuração do navigator
+
+3. Testar downgrade de expo-router para ~5.x ou atualização para versão mais
+   recente que exponha `useFocusEffect` nativamente.
+
+4. Verificar se react-native-gifted-charts (^1.4.74) usado em CompletionChart
+   possui dependências internas de @react-navigation não mapeadas.
+
+5. Criar uma tela mínima de reprodução (apenas o toggle, sem dados) para
+   isolar se o erro é do layout ou dos componentes de dados.
+
+
+AMBIENTE
+--------
+  expo:              ~54.0.33
+  expo-router:       ~6.0.23
+  react:             19.1.0
+  react-native:      0.81.5
+  nativewind:        ^4.2.1
+  tailwindcss:       ^3.4.19
+  zustand:           ^5.0.11
+  @react-navigation: ^7.x (via expo-router interno)
+
+================================================================================
