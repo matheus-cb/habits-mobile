@@ -23,6 +23,11 @@ export default function StatsScreen() {
   const { habits, statsMap, checkinsMap, loading, error, refresh } = useAnalytics();
   const [view, setView] = useState<ViewMode>('habit');
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Recarrega ao entrar na aba "Por Hábito" (sem useFocusEffect — causa MISSING_CONTEXT_ERROR)
   useEffect(() => {
@@ -40,6 +45,10 @@ export default function StatsScreen() {
   const checkins = selectedHabitId ? checkinsMap[selectedHabitId] ?? [] : [];
   const unlocked = stats ? getUnlockedAchievements(stats) : [];
   const unlockedIds = new Set(unlocked.map((a) => a.id));
+
+  if (!mounted) {
+    return <SafeAreaView className="flex-1 bg-gray-50" />;
+  }
 
   if (!loading && habits.length === 0) {
     return (
