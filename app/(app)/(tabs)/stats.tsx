@@ -29,9 +29,9 @@ export default function StatsScreen() {
     setMounted(true);
   }, []);
 
-  // Recarrega ao entrar na aba "Por Hábito" (sem useFocusEffect — causa MISSING_CONTEXT_ERROR)
+  // Recarrega ao trocar de aba
   useEffect(() => {
-    if (view === 'habit') refresh();
+    refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
@@ -76,17 +76,25 @@ export default function StatsScreen() {
           <View className="flex-row bg-gray-200 rounded-full p-1">
             <TouchableOpacity
               onPress={() => setView('global')}
-              className={`flex-1 py-2 rounded-full items-center ${view === 'global' ? 'bg-white shadow-sm' : ''}`}
+              className="flex-1 py-2 rounded-full items-center"
+              style={view === 'global' ? { backgroundColor: '#fff', shadowOpacity: 0.05 } : undefined}
             >
-              <Text className={`text-sm font-medium ${view === 'global' ? 'text-purple-600' : 'text-gray-500'}`}>
+              <Text
+                className="text-sm font-medium"
+                style={{ color: view === 'global' ? '#9333ea' : '#6b7280' }}
+              >
                 Geral
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setView('habit')}
-              className={`flex-1 py-2 rounded-full items-center ${view === 'habit' ? 'bg-white shadow-sm' : ''}`}
+              className="flex-1 py-2 rounded-full items-center"
+              style={view === 'habit' ? { backgroundColor: '#fff', shadowOpacity: 0.05 } : undefined}
             >
-              <Text className={`text-sm font-medium ${view === 'habit' ? 'text-purple-600' : 'text-gray-500'}`}>
+              <Text
+                className="text-sm font-medium"
+                style={{ color: view === 'habit' ? '#9333ea' : '#6b7280' }}
+              >
                 Por Hábito
               </Text>
             </TouchableOpacity>
@@ -108,7 +116,7 @@ export default function StatsScreen() {
           <>
             {/* ── Visão Geral ── */}
             {view === 'global' && (
-              <>
+              <View key="global-view">
                 <GlobalSummaryCards habits={habits} statsMap={statsMap} />
                 <ActivityHeatmap checkinsMap={checkinsMap} />
                 <HabitCompletionBars habits={habits} statsMap={statsMap} />
@@ -116,12 +124,12 @@ export default function StatsScreen() {
                   Tabela Comparativa
                 </Text>
                 <SortableHabitsTable habits={habits} statsMap={statsMap} />
-              </>
+              </View>
             )}
 
             {/* ── Por Hábito ── */}
             {view === 'habit' && (
-              <>
+              <View key="habit-view">
                 {/* Habit selector */}
                 <ScrollView
                   horizontal
@@ -206,7 +214,7 @@ export default function StatsScreen() {
                     </View>
                   </>
                 )}
-              </>
+              </View>
             )}
           </>
         )}
