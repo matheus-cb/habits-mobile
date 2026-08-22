@@ -94,7 +94,7 @@ Uma camada só: nada aqui depende de serviço externo. Os testes dublam `fetch`,
 
 ```bash
 cp .env.example .env    # EXPO_PUBLIC_API_URL; Android precisa do IP da máquina
-npm ci
+npm ci                  # ou `npm ci --dry-run` para só validar peers
 npx tsc --noEmit
 npm run lint
 npm test                # Jest + jest-expo
