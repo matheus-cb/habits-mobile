@@ -129,6 +129,11 @@ Registrada aqui para não ser confundida com descuido:
 - Cada invariante tocada tem teste que cita o número no nome.
 - Toda invariante tem também um teste **adversário**: um que tenta violá-la e
   exige que seja barrada. Teste de caminho feliz não prova fronteira.
+- **O gate local roda o que o CI roda.** A checagem 9 do `check-agent-docs.sh`
+  compara os comandos `npm` do workflow com o `scripts/verify.sh`: o workflow é a
+  fonte, o script é o derivado. Duas listas descrevendo a mesma coisa, sem nada
+  comparando, foi como `npm install` no verify e `npm ci` no CI conviveram — e o
+  CI ficou vermelho sem nenhuma camada local poder ver.
 - **Verificação nova tem caso vizinho.** Depois de escrever um gate, uma trava ou
   um guarda, construa o caso que ele **deveria** pegar e veja-o pegar — não o caso
   que motivou escrevê-lo, que já passa por construção. "Toda invariante tem teste
