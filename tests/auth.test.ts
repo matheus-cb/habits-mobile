@@ -30,10 +30,11 @@ describe('INV-23 — o token do mobile mora no SecureStore', () => {
     expect(conteudoDoCofre()).toEqual({ token: 'tok-123' });
   });
 
-  it('INV-23: adversário — o token não vai para AsyncStorage nem para nenhum global', async () => {
-    // No mobile, o Keychain/Keystore é criptografado pelo sistema; AsyncStorage é
-    // um arquivo em claro no sandbox do app. Trocar um pelo outro é uma linha de
-    // código e nenhuma tela muda — é por isso que isto precisa de teste.
+  it('INV-23: adversário — o token não vaza para nenhum global do processo', async () => {
+    // O nome anterior prometia "nem para AsyncStorage", e nenhuma asserção aqui
+    // olhava para AsyncStorage. A cobertura existe, em `toolchain.test.ts`, e por
+    // um caminho melhor: a ausência da própria dependência. Um nome que promete
+    // mais do que a asserção prova convida a próxima pessoa a confiar nele.
     await authApi.saveToken('tok-123');
 
     const globais = JSON.stringify(

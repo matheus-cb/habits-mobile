@@ -14,7 +14,27 @@ function major(range: string): number {
 }
 
 describe('INV-24 — NativeWind 4 exige Tailwind 3', () => {
-  it('INV-24: com nativewind 4 instalado, o tailwindcss é major 3', () => {
+  it('INV-24: a versão INSTALADA de tailwindcss é major 3', () => {
+    // O `package.json` diz o que foi PEDIDO; `node_modules` tem o que o build
+    // usa. O caso que a leitura do package.json não pega: instalação parcial,
+    // resolução transitiva, `npm i` interrompido, ou alguém que testou a 4 à mão
+    // e não reverteu.
+    //
+    // Isso importa porque INV-24 existe justamente por a falha ser silenciosa —
+    // estilos que não aplicam, sem erro de build. Se a falha é silenciosa,
+    // verificar a declaração não basta.
+    const instalado = (
+      require('tailwindcss/package.json') as { version: string }
+    ).version;
+    const nativewindInstalado = (
+      require('nativewind/package.json') as { version: string }
+    ).version;
+
+    expect(major(instalado)).toBe(3);
+    expect(major(nativewindInstalado)).toBe(4);
+  });
+
+  it('INV-24: o declarado no package.json concorda com o instalado', () => {
     // Tailwind 4 trocou o pipeline de CSS e o NativeWind 4 não o suporta. A
     // atualização é tentadora e silenciosa: `npm i tailwindcss@latest` instala a
     // 4, o app compila, e os estilos simplesmente não aplicam em dispositivo —
@@ -41,7 +61,18 @@ describe('INV-24 — NativeWind 4 exige Tailwind 3', () => {
   });
 });
 
-describe('INV-23 — nenhum armazenamento de token fora do SecureStore', () => {
+describe('INV-23 — o SecureStore é usado só onde está declarado', () => {
+  /**
+   * O nome antes era "nenhum armazenamento de token fora do SecureStore", e
+   * afirmava exaustividade que estes casos não têm. Eles provam que **o
+   * SecureStore** não é usado fora da lista permitida — que é uma classe fechada
+   * e verificável.
+   *
+   * O que NÃO provam: que o token não vaza por outro caminho. `expo-file-system`,
+   * um `console.log(token)`, um POST para telemetria ou um cache em objeto global
+   * passariam sem tocar `expo-secure-store`. Cobrir isso tem superfície grande e
+   * valor decrescente; o que não é aceitável é o nome sugerir que já está coberto.
+   */
   it('INV-23: o projeto não depende de AsyncStorage', () => {
     // Se `@react-native-async-storage/async-storage` entrar como dependência,
     // guardar o token nele passa a ser uma linha de código sem nada avisando.

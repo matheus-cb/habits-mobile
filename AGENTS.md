@@ -24,13 +24,29 @@ estão as que vivem aqui.
 Regras numeradas e testáveis. Use o número no nome do teste e na mensagem de
 commit — assim cada regra tem um teste apontável, em vez de "temos testes".
 
+### Próprias — verificadas aqui
+
+Cada uma tem teste em `tests/` que cita o número no nome, e o gate exige isso.
+
 | # | Regra | Onde vive |
 |---|---|---|
 | **INV-20** | O token vive em **exatamente um** lugar: gravar substitui, sair apaga | `src/lib/api/auth.ts` |
 | **INV-21** | **401** derruba a sessão; **403** e **409** não | `src/lib/api/client.ts` + `src/lib/api/session.ts` |
 | **INV-22** | **409** no check-in é duplicata: marca como feito, não mostra erro | `src/store/habits.store.ts` → `checkin` |
-| **INV-23** | O token mora no **expo-secure-store** (Keychain/Keystore), nunca em AsyncStorage | `src/lib/api/auth.ts` |
-| **INV-24** | NativeWind 4 exige Tailwind **3** | `package.json`, `tailwind.config.js`, `babel.config.js` |
+| **INV-23** | O token mora no **expo-secure-store**, nunca em AsyncStorage | `src/lib/api/auth.ts` |
+| **INV-24** | NativeWind 4 exige Tailwind **3**, **instalado** e não só declarado | `package.json`, `node_modules`, `tailwind.config.js`, `babel.config.js` |
+
+### Herdadas da API — contexto, não cobertura
+
+Citadas porque o comportamento daqui depende delas. Os testes estão em
+`habits-api`, e o gate deste repositório as exclui de propósito: exigir teste
+delas aqui seria duplicar cobertura e mentir sobre onde a garantia mora.
+
+| # | Regra da API | Por que importa aqui |
+|---|---|---|
+| **INV-01** | Um check-in por hábito por dia, garantido pelo banco | é a origem do **409** que INV-22 trata |
+| **INV-11** | Senha nunca sai do service para a resposta | há um teste `INV-11` aqui, do lado do cliente: a senha não vai para o cofre |
+| **INV-19** | A proposta de reagendamento é sugestão, não autorização | quando houver tela de insights, é o que ela precisa respeitar |
 
 Quatro pontos que sustentam essas regras e não são óbvios no código:
 

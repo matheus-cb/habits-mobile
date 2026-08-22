@@ -54,9 +54,20 @@ done
 #    menção não é provar teste.
 if [ -d tests ]; then
   faltando=""
-  for inv in INV-20 INV-21 INV-22 INV-23 INV-24; do
-    grep -rqE "(it|test|describe)\(['\"]$inv" tests/ || faltando="$faltando $inv"
+  # A lista é DERIVADA do AGENTS.md, não literal. A versão anterior era
+  # `for inv in INV-20 INV-21 INV-22`, e isso invertia o propósito da checagem:
+  # declarar INV-25 no AGENTS.md não exigia teste nenhum — a tabela crescia e a
+  # cobertura não, que é exatamente o que este bloco existe para impedir.
+  while read -r inv; do
+    grep -rqE "(it|test|describe)\\(['\"]$inv" tests/ || faltando="$faltando $inv"
+  done < <(grep -oE 'INV-[0-9]{2}' AGENTS.md | sort -u)
+
+  # INV-01 a INV-19 vivem na habits-api; os testes delas estão lá. Aparecem no
+  # AGENTS.md daqui como contexto de contrato, na seção "Herdadas da API".
+  for api in INV-0{1..9} INV-1{0..9}; do
+    faltando="${faltando// $api/}"
   done
+
   [ -z "$faltando" ] ||
     falhar "invariante sem teste que a cite pelo número:$faltando."
 fi
