@@ -6,8 +6,7 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-  Alert,
-} from 'react-native';
+  } from 'react-native';
 import { Link, router } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

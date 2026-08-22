@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { notifyUnauthorized } from './session';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3333/api/v1';
 
@@ -44,9 +45,10 @@ export async function apiClient<T>(
     const data = await response.json();
 
     if (!response.ok) {
+      // INV-21: token inválido ou expirado derruba a sessão. Ver `session.ts`
+      // para por que isto não é mais um `await import` da store.
       if (response.status === 401) {
-        const { useAuthStore } = await import('@/store/auth.store');
-        useAuthStore.getState().logout();
+        await notifyUnauthorized();
       }
       const message = (data as any).error || (data as any).message || 'Erro na requisição';
       throw new ApiError(message, response.status, data);

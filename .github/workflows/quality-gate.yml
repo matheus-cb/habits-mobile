@@ -1,0 +1,31 @@
+name: quality-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  agent-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./scripts/check-agent-docs.sh
+
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # `npm ci` roda o postinstall com patch-package, que aplica o patch de
+      # react-native-css-interop. Sem ele o Jest carrega uma versão diferente da
+      # que o app usa.
+      - run: npm ci
+      # Não há passo de build: gerar binário exige EAS ou toolchain nativa.
+      # `tsc --noEmit` é o mais próximo que cabe num gate.
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm test

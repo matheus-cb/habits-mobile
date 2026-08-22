@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { format, isSameMonth, isToday, isSameDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { HabitDot, habitColor } from './HabitDot';
 import type { Habit } from '@/types';
 

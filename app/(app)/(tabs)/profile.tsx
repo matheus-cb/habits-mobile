@@ -5,7 +5,6 @@ import {
   Switch,
   TouchableOpacity,
   Alert,
-  Platform,
   Modal,
   ScrollView,
   TextInput,
@@ -43,10 +42,8 @@ export default function ProfileScreen() {
   const [editEmail, setEditEmail] = useState('');
   const [editLoading, setEditLoading] = useState(false);
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
+  // Declarada ANTES do efeito que a chama: o hoisting funcionava, mas depender
+  // dele fazia o lint (com razão) acusar acesso a variável antes da declaração.
   async function loadSettings() {
     const enabled = await SecureStore.getItemAsync(REMINDER_KEY);
     const h = await SecureStore.getItemAsync(REMINDER_HOUR_KEY);
@@ -55,6 +52,15 @@ export default function ProfileScreen() {
     if (h) setReminderHour(parseInt(h, 10));
     if (m) setReminderMinute(parseInt(m, 10));
   }
+
+  useEffect(() => {
+    // Carrega preferência do SecureStore para o estado. A regra acusa `setState`
+    // em efeito, mas aqui ele acontece DEPOIS de um `await` — não é render em
+    // cascata, é dado assíncrono chegando. `loadSettings` é estável (declarada no
+    // corpo e sem dependência externa), então a lista vazia é correta.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadSettings();
+  }, []);
 
   async function toggleNotifications(value: boolean) {
     if (value) {

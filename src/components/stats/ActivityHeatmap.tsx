@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
-import { subDays, startOfWeek, subWeeks, eachDayOfInterval, format, getDay } from 'date-fns';
+import { startOfWeek, subWeeks, eachDayOfInterval, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Checkin } from '@/types';
 
@@ -34,7 +34,7 @@ export function ActivityHeatmap({ checkinsMap }: ActivityHeatmapProps) {
     }
 
     // Group into weeks (7 days each)
-    const weeks: Array<Array<{ date: string; count: number }>> = [];
+    const weeks: { date: string; count: number }[][] = [];
     for (let i = 0; i < allDays.length; i += 7) {
       weeks.push(
         allDays.slice(i, i + 7).map((d) => {

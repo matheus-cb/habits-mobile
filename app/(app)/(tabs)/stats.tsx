@@ -25,7 +25,13 @@ export default function StatsScreen() {
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
+  // Espera um frame antes de renderizar o conteúdo. Existe para contornar o
+  // MISSING_CONTEXT_ERROR que travava esta aba (corrigido em 05/03/2026, ver
+  // BUG_STATS_MISSING_CONTEXT_ERROR.txt): os gráficos montavam antes do
+  // SafeAreaProvider. Remover o gate reintroduz o crash, então o `setState` em
+  // efeito fica — declarado, não esquecido.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -35,14 +41,13 @@ export default function StatsScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
-  useEffect(() => {
-    if (habits.length > 0 && !selectedHabitId) {
-      setSelectedHabitId(habits[0].id);
-    }
-  }, [habits]);
+  // Seleção inicial é estado DERIVADO, não efeito: `?? habits[0]?.id` dá o mesmo
+  // resultado sem um render extra, e sem o efeito que reagia a `habits` e podia
+  // sobrescrever a escolha da pessoa numa recarga.
+  const habitId = selectedHabitId ?? habits[0]?.id ?? null;
 
-  const stats = selectedHabitId ? statsMap[selectedHabitId] ?? null : null;
-  const checkins = selectedHabitId ? checkinsMap[selectedHabitId] ?? [] : [];
+  const stats = habitId ? statsMap[habitId] ?? null : null;
+  const checkins = habitId ? checkinsMap[habitId] ?? [] : [];
   const unlocked = stats ? getUnlockedAchievements(stats) : [];
   const unlockedIds = new Set(unlocked.map((a) => a.id));
 

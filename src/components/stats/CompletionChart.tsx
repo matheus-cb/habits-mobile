@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
-import { subDays, format, parseISO } from 'date-fns';
+import { subDays, format } from 'date-fns';
 import type { Checkin } from '@/types';
 
 interface CompletionChartProps {
