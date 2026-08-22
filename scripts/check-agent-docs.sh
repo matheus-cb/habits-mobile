@@ -48,10 +48,14 @@ done
 
 # 7. Invariante declarada sem teste que a cite pelo número é invariante
 #    decorativa. Só as que VIVEM aqui são exigidas; INV-01 a INV-19 são da API.
+#
+#    O padrão exige a forma `it('INV-nn` ou `describe('INV-nn`: a versão anterior
+#    usava `grep -F` e um comentário `// INV-21: ver adiante` a satisfazia. Provar
+#    menção não é provar teste.
 if [ -d tests ]; then
   faltando=""
   for inv in INV-20 INV-21 INV-22 INV-23 INV-24; do
-    grep -rqF "$inv" tests/ || faltando="$faltando $inv"
+    grep -rqE "(it|test|describe)\(['\"]$inv" tests/ || faltando="$faltando $inv"
   done
   [ -z "$faltando" ] ||
     falhar "invariante sem teste que a cite pelo número:$faltando."
