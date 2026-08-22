@@ -36,6 +36,16 @@ Cada uma tem teste em `tests/` que cita o número no nome, e o gate exige isso.
 | **INV-23** | O token mora no **expo-secure-store**, nunca em AsyncStorage | `src/lib/api/auth.ts` |
 | **INV-24** | NativeWind 4 exige Tailwind **3**, **instalado** e não só declarado | `package.json`, `node_modules`, `tailwind.config.js`, `babel.config.js` |
 
+### Herdadas com faceta local — também verificadas aqui
+
+Regra da API que tem um lado deste cliente, e esse lado **tem teste aqui**. O gate
+as exige como as próprias — foi por elas terem ficado de fora que apagar o teste
+`INV-11` não era notado por ninguém.
+
+| # | Regra da API | O que se verifica aqui |
+|---|---|---|
+| **INV-11** | Senha nunca sai do service para a resposta | a senha não vai para o cofre |
+
 ### Herdadas da API — contexto, não cobertura
 
 Citadas porque o comportamento daqui depende delas. Os testes estão em
@@ -45,7 +55,6 @@ delas aqui seria duplicar cobertura e mentir sobre onde a garantia mora.
 | # | Regra da API | Por que importa aqui |
 |---|---|---|
 | **INV-01** | Um check-in por hábito por dia, garantido pelo banco | é a origem do **409** que INV-22 trata |
-| **INV-11** | Senha nunca sai do service para a resposta | há um teste `INV-11` aqui, do lado do cliente: a senha não vai para o cofre |
 | **INV-19** | A proposta de reagendamento é sugestão, não autorização | quando houver tela de insights, é o que ela precisa respeitar |
 
 Quatro pontos que sustentam essas regras e não são óbvios no código:
@@ -84,11 +93,15 @@ Uma camada só: nada aqui depende de serviço externo. Os testes dublam `fetch`,
 `expo-secure-store` e `expo-router` — a API não precisa estar de pé.
 
 ```bash
+cp .env.example .env    # EXPO_PUBLIC_API_URL; Android precisa do IP da máquina
 npm ci
 npx tsc --noEmit
 npm run lint
-npm test          # Jest + jest-expo
+npm test                # Jest + jest-expo
 ```
+
+Os testes não precisam do `.env` — dublam `fetch`. O `cp` é para **rodar** o app;
+detalhes de rede e emulador em `docs/DESENVOLVIMENTO.md`.
 
 `npm run verify` roda os quatro em ordem. **Não existe build verificável em CI:**
 gerar binário exige EAS ou toolchain nativa, e nenhum dos dois cabe no gate.
@@ -116,6 +129,12 @@ Registrada aqui para não ser confundida com descuido:
 - Cada invariante tocada tem teste que cita o número no nome.
 - Toda invariante tem também um teste **adversário**: um que tenta violá-la e
   exige que seja barrada. Teste de caminho feliz não prova fronteira.
+- **Verificação nova tem caso vizinho.** Depois de escrever um gate, uma trava ou
+  um guarda, construa o caso que ele **deveria** pegar e veja-o pegar — não o caso
+  que motivou escrevê-lo, que já passa por construção. "Toda invariante tem teste
+  adversário" vale para os gates também, e é onde ninguém pensa em aplicar: gate
+  não é código de produção. Nove defeitos desta safra eram verificações que
+  funcionavam no caso de origem e olhavam para a metade errada.
 - `tsc --noEmit`, `lint` (zero **erros**) e `test` passam.
 
 ## Risco e revisão
