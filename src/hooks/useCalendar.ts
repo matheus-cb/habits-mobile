@@ -7,7 +7,6 @@ import {
   endOfWeek,
   addMonths,
   subMonths,
-  format,
   isSameDay,
 } from 'date-fns';
 import type { Checkin } from '@/types';

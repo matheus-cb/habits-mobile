@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { authApi } from '@/lib/api/auth';
+import { onUnauthorized } from '@/lib/api/session';
 import type { User, LoginCredentials, RegisterCredentials } from '@/types';
 
 const errorMessages: Record<string, string> = {
@@ -92,3 +93,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   clearError: () => set({ error: null }),
 }));
+
+// INV-21: registra o logout como reação a qualquer 401 da API.
+//
+// No escopo do módulo, depois do `create`: a store já existe aqui, e não há
+// ciclo — `session.ts` não importa nada. Sem Provider, o Zustand pode ser lido
+// de fora da árvore de componentes, que é o que permite este registro.
+onUnauthorized(() => useAuthStore.getState().logout());

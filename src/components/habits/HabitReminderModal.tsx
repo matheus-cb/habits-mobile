@@ -35,11 +35,18 @@ export function HabitReminderModal({
   const [hour, setHour] = useState(initial.hour);
   const [minute, setMinute] = useState(initial.minute);
 
-  // Reset pickers when modal opens with a new time
+  // Reset dos seletores quando o modal abre com outro horário.
+  //
+  // A forma "certa" para a regra seria a tela pai remontar o modal com uma `key`
+  // — o que exigiria mudar todos os pontos que o abrem. Enquanto isso não
+  // acontece, o reset fica aqui, e ele é correto: sem ele, reabrir o modal para
+  // outro hábito mostraria o horário do hábito anterior.
   React.useEffect(() => {
     if (visible) {
       const t = parseTime(currentTime);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHour(t.hour);
+       
       setMinute(t.minute);
     }
   }, [visible, currentTime]);

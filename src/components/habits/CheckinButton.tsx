@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, Text, Animated } from 'react-native';
 
 interface CheckinButtonProps {
@@ -10,7 +10,9 @@ interface CheckinButtonProps {
 }
 
 export function CheckinButton({ done, onPress, onUndo, loading, loadingUndo }: CheckinButtonProps) {
-  const scale = useRef(new Animated.Value(1)).current;
+  // `useRef(new Animated.Value(1)).current` era o padrão antigo do React Native
+  // e lê um ref durante o render. `useMemo` cria o valor uma vez sem essa leitura.
+  const scale = useMemo(() => new Animated.Value(1), []);
 
   function animate() {
     Animated.sequence([
