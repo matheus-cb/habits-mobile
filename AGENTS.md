@@ -134,6 +134,20 @@ Registrada aqui para não ser confundida com descuido:
   fonte, o script é o derivado. Duas listas descrevendo a mesma coisa, sem nada
   comparando, foi como `npm install` no verify e `npm ci` no CI conviveram — e o
   CI ficou vermelho sem nenhuma camada local poder ver.
+- **Filtre a exibição, nunca a captura.** `cmd 2>&1 | tee log | grep …`, e não
+  `cmd | grep …`. Um flake da `habits-api` ficou sem diagnóstico porque o `grep` do
+  turno descartou o NOME do teste que falhou — a evidência deixou de existir.
+- **Antes de confiar num instrumento novo, calibre-o contra resultado conhecido.**
+  Cinco defeitos desta safra foram instrumento certo em ambiente errado: `npm install`
+  contra CI que usa `npm ci`, e screenshot escalado lido como 1:1 (que fez um botão
+  funcionando parecer quebrado). E a quinta é na direção INVERSA: um cenário passou em
+  Node puro e falhou deterministicamente sob Jest — o ambiente mais permissivo esconde
+  o defeito, e parar nele dá medição correta com conclusão errada.
+- **Asserção sobre EFEITO, nunca sobre chamada.** `resolves.toBeUndefined()` num helper
+  que não faz nada passa para sempre. Vale em dobro para sugestão de revisor não medida.
+- **`git commit` em `main`/`master` é recusado por hook.** `npm run hooks:install`
+  instala `scripts/hooks/pre-commit`. Hook não é clonado, então a instalação é passo
+  explícito — e a regra deixa de depender de conferir o branch.
 - **Verificação nova tem caso vizinho.** Depois de escrever um gate, uma trava ou
   um guarda, construa o caso que ele **deveria** pegar e veja-o pegar — não o caso
   que motivou escrevê-lo, que já passa por construção. "Toda invariante tem teste
