@@ -138,9 +138,13 @@ Registrada aqui para não ser confundida com descuido:
   `cmd | grep …`. Um flake da `habits-api` ficou sem diagnóstico porque o `grep` do
   turno descartou o NOME do teste que falhou — a evidência deixou de existir.
 - **Antes de confiar num instrumento novo, calibre-o contra resultado conhecido.**
-  Quatro defeitos desta safra foram instrumento certo em ambiente errado: `npm install`
+  Cinco defeitos desta safra foram instrumento certo em ambiente errado: `npm install`
   contra CI que usa `npm ci`, e screenshot escalado lido como 1:1 (que fez um botão
-  funcionando parecer quebrado). O instrumento funcionava e reportava sobre outra coisa.
+  funcionando parecer quebrado). E a quinta é na direção INVERSA: um cenário passou em
+  Node puro e falhou deterministicamente sob Jest — o ambiente mais permissivo esconde
+  o defeito, e parar nele dá medição correta com conclusão errada.
+- **Asserção sobre EFEITO, nunca sobre chamada.** `resolves.toBeUndefined()` num helper
+  que não faz nada passa para sempre. Vale em dobro para sugestão de revisor não medida.
 - **`git commit` em `main`/`master` é recusado por hook.** `npm run hooks:install`
   instala `scripts/hooks/pre-commit`. Hook não é clonado, então a instalação é passo
   explícito — e a regra deixa de depender de conferir o branch.
